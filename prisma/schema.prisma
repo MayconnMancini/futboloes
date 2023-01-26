@@ -1,0 +1,96 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Bolao {
+  id          Int      @id @default(autoincrement())
+  nome        String
+  codigo      String   @unique
+  createdAt   DateTime @default(now())
+  donoBolaoId Int?
+
+  participantes Participante[]
+  donoBolao     Usuario?       @relation(fields: [donoBolaoId], references: [id])
+  Jogos_bolao   Jogo_bolao[]
+}
+
+model Participante {
+  id         Int @id @default(autoincrement())
+  usuario_id Int
+  bolao_id   Int
+
+  palpites Palpite[]
+  bolao    Bolao     @relation(fields: [bolao_id], references: [id])
+  usuario  Usuario   @relation(fields: [usuario_id], references: [id])
+
+  @@unique([usuario_id, bolao_id])
+}
+
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  email     String   @unique
+  senha     String?
+  googleId  String?  @unique
+  avatarUrl String?
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  participandoEm Participante[]
+  donoBoloes     Bolao[]
+}
+
+model Jogo {
+  id                Int      @id @default(autoincrement())
+  fixtureIdApi      Int?
+  data              DateTime @default(now())
+  timeCasa          String
+  timeFora          String
+  competicao        String
+  country           String?
+  logo              String?
+  flag              String?
+  logoTimeCasa      String?
+  logoTimeFora      String?
+  resultGolTimeCasa Int?
+  resultGolTimeFora Int?
+  statusJogo        String?
+
+  Jogos_boloes Jogo_bolao[]
+}
+
+model Jogo_bolao {
+  id        Int      @id @default(autoincrement())
+  jogo_id   Int
+  bolao_id  Int
+  createdAt DateTime @default(now())
+
+  bolao    Bolao     @relation(fields: [bolao_id], references: [id])
+  jogo     Jogo      @relation(fields: [jogo_id], references: [id])
+  palpites Palpite[]
+
+  @@unique([jogo_id, bolao_id])
+}
+
+model Palpite {
+  id              Int      @id @default(autoincrement())
+  golTimeCasa     Int
+  golTimeFora     Int
+  createdAt       DateTime @default(now())
+  pontuacao       Int?
+  jogoBolao_id    Int
+  participante_id Int
+
+  participante Participante @relation(fields: [participante_id], references: [id])
+  jogoBolao    Jogo_bolao   @relation(fields: [jogoBolao_id], references: [id])
+
+  @@unique([participante_id, jogoBolao_id])
+}
