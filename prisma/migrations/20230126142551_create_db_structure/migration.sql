@@ -28,6 +28,7 @@ CREATE TABLE `Usuario` (
     `senha` VARCHAR(191) NULL,
     `googleId` VARCHAR(191) NULL,
     `avatarUrl` VARCHAR(191) NULL,
+    `isAdmin` BOOLEAN NOT NULL DEFAULT false,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     UNIQUE INDEX `Usuario_email_key`(`email`),
@@ -38,14 +39,19 @@ CREATE TABLE `Usuario` (
 -- CreateTable
 CREATE TABLE `Jogo` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `fixtureIdApi` INTEGER NULL,
     `data` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `timeCasa` VARCHAR(191) NOT NULL,
     `timeFora` VARCHAR(191) NOT NULL,
     `competicao` VARCHAR(191) NOT NULL,
+    `country` VARCHAR(191) NULL,
+    `logo` VARCHAR(191) NULL,
+    `flag` VARCHAR(191) NULL,
     `logoTimeCasa` VARCHAR(191) NULL,
     `logoTimeFora` VARCHAR(191) NULL,
     `resultGolTimeCasa` INTEGER NULL,
     `resultGolTimeFora` INTEGER NULL,
+    `statusJogo` VARCHAR(191) NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -55,6 +61,7 @@ CREATE TABLE `Jogo_bolao` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `jogo_id` INTEGER NOT NULL,
     `bolao_id` INTEGER NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     UNIQUE INDEX `Jogo_bolao_jogo_id_bolao_id_key`(`jogo_id`, `bolao_id`),
     PRIMARY KEY (`id`)
@@ -66,6 +73,7 @@ CREATE TABLE `Palpite` (
     `golTimeCasa` INTEGER NOT NULL,
     `golTimeFora` INTEGER NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `pontuacao` INTEGER NULL,
     `jogoBolao_id` INTEGER NOT NULL,
     `participante_id` INTEGER NOT NULL,
 
