@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "production": "node ./build/index.js",
+    "production": "node ./build/src/server.js",
     "postinstall": "tsc"
   },
   "keywords": [],
