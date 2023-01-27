@@ -446,7 +446,7 @@ async function jogoRoutes(fastify) {
             });
             jogosBD.map((item) => {
                 resp.map(async (r) => {
-                    if (item.fixtureIdApi === r.fixture.id && r.fixture.status.losg === "Match Finished") {
+                    if (item.fixtureIdApi === r.fixture.id && r.fixture.status.long === "Match Finished") {
                         console.log("id encontrado");
                         console.log(r.fixture.id);
                         await prisma_1.prisma.jogo.update({
