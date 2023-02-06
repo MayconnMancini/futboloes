@@ -20,6 +20,7 @@ model Bolao {
   participantes Participante[]
   donoBolao     Usuario?       @relation(fields: [donoBolaoId], references: [id])
   Jogos_bolao   Jogo_bolao[]
+  Pendencias    Pendencias[]
 }
 
 model Participante {
@@ -46,6 +47,7 @@ model Usuario {
 
   participandoEm Participante[]
   donoBoloes     Bolao[]
+  Pendencias     Pendencias[]
 }
 
 model Jogo {
@@ -93,4 +95,15 @@ model Palpite {
   jogoBolao    Jogo_bolao   @relation(fields: [jogoBolao_id], references: [id])
 
   @@unique([participante_id, jogoBolao_id])
+}
+
+model Pendencias {
+  id         Int @id @default(autoincrement())
+  usuario_id Int
+  bolao_id   Int
+
+  bolao   Bolao   @relation(fields: [bolao_id], references: [id])
+  usuario Usuario @relation(fields: [usuario_id], references: [id])
+
+  @@unique([usuario_id, bolao_id])
 }
