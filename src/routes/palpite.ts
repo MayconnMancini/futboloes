@@ -136,4 +136,86 @@ export async function palpiteRoutes(fastify: FastifyInstance) {
       })
     }
   })
+
+  // retorna todos os palpites do jogo
+  fastify.get('/bolao/:bolao_id/jogo/:jogo_id/palpites', {
+    onRequest: [authenticate]
+  }, async (request, reply) => {
+
+    const getBolaoParams = z.object({
+      bolao_id: z.string(),
+      jogo_id: z.string(),
+    })
+
+    const { bolao_id } = getBolaoParams.parse(request.params)
+    const { jogo_id } = getBolaoParams.parse(request.params)
+
+    const bolao = await prisma.bolao.findFirst({
+      where: {
+        id: parseInt(bolao_id)
+      }
+    })
+
+    if (!bolao) {
+      return reply.status(400).send({
+        message: "Bolão não existe"
+      })
+    }
+
+    //if (bolao.donoBolaoId != parseInt(request.user.sub)) {
+    //  return reply.status(400).send({
+    //    message: "Apenas o dono do bolão tem permissão para visualizar os palpites"
+    //  })
+    //}
+
+    const jogo_bolao = await prisma.jogo_bolao.findFirst({
+      where: {
+        AND: [
+          {
+            bolao_id: parseInt(bolao_id)
+          },
+          {
+            jogo_id: parseInt(jogo_id)
+          }
+        ]
+      }
+    })
+
+    if (!jogo_bolao) {
+      return reply.status(400).send({
+        message: "Jogo não cadastrado no bolão"
+      })
+    }
+
+    try {
+      const palpites = await prisma.palpite.findMany({
+        where: {
+          jogoBolao_id: jogo_bolao.id
+        },
+        select: {
+          id: true,
+          participante: {
+            select: {
+              usuario: {
+                select: {
+                  id: true,
+                  nome: true,
+                }
+              }
+            },
+          },
+        }
+      })
+
+      return { palpites }
+
+    } catch (error) {
+      return reply.status(400).send({
+        message: "ERRO -> " + error
+      })
+    }
+
+
+
+  });
 }
