@@ -42,7 +42,7 @@ async function updatePoints() {
             id: item.id
           },
           data: {
-            pontuacao: 20
+            pontuacao: 21
           }
         })
       } else {
