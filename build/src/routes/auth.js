@@ -16,6 +16,62 @@ async function authRoutes(fastify) {
         console.log("request => " + request);
         return { user: request.user };
     });
+    fastify.post('/newPassword', {
+        onRequest: [authenticate_1.authenticate]
+    }, async (request, reply) => {
+        try {
+            const loginBody = zod_1.z.object({
+                email: zod_1.z.string().email(),
+                senha: zod_1.z.string(),
+            });
+            let user = await prisma_1.prisma.usuario.findFirst({
+                where: {
+                    id: parseInt(request.user.sub)
+                }
+            });
+            if (!user) {
+                return reply.status(400).send({
+                    message: 'Não autenticado'
+                });
+            }
+            else {
+                if (!user.isAdmin) {
+                    return reply.status(400).send({
+                        message: 'Sem permissão'
+                    });
+                }
+            }
+            const { email, senha } = loginBody.parse(request.body);
+            let usuario = await prisma_1.prisma.usuario.findFirst({
+                where: {
+                    email: email
+                }
+            });
+            if (!usuario) {
+                return reply.status(400).send({
+                    message: 'Email não cadastrado'
+                });
+            }
+            if (senha != null) {
+                const hashPassword = await bcrypt_1.default.hash(senha, 10);
+                console.log(hashPassword);
+                await prisma_1.prisma.usuario.update({
+                    where: {
+                        email: email
+                    },
+                    data: {
+                        senha: hashPassword
+                    }
+                });
+                return reply.status(201).send({
+                    message: "Senha alterada com sucesso"
+                });
+            }
+        }
+        catch (error) {
+            console.log(error);
+        }
+    });
     fastify.post('/login', async (request, reply) => {
         try {
             const loginBody = zod_1.z.object({
