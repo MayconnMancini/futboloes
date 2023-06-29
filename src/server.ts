@@ -19,7 +19,7 @@ async function bootstrap() {
   })
 
   await fastify.register(cors, {
-    origin: 'true',
+    origin: '*',
   })
 
   // em produção isso precisa ser uma variável ambiente

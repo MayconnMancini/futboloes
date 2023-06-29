@@ -112,6 +112,9 @@ async function authRoutes(fastify) {
         }
         catch (error) {
             console.log(error);
+            return reply.status(500).send({
+                message: `Erro interno do servidor -> ${error}`
+            });
         }
     });
     fastify.post('/signup', async (request, reply) => {

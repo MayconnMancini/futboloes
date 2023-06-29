@@ -43,7 +43,7 @@ async function bootstrap() {
         logger: true,
     });
     await fastify.register(cors_1.default, {
-        origin: 'true',
+        origin: '*',
     });
     // em produção isso precisa ser uma variável ambiente
     await fastify.register(jwt_1.default, {

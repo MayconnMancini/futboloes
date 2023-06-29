@@ -126,6 +126,9 @@ export async function authRoutes(fastify: FastifyInstance) {
 
     } catch (error) {
       console.log(error)
+      return reply.status(500).send({
+        message: `Erro interno do servidor -> ${error}`
+      });
     }
   })
 
