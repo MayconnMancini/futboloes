@@ -523,8 +523,11 @@ export async function jogoRoutes(fastify: FastifyInstance) {
                 id: item.id
               },
               data: {
-                resultGolTimeCasa: r.score.fulltime.home,
-                resultGolTimeFora: r.score.fulltime.away,
+                //resultGolTimeCasa: r.score.fulltime.home,
+                //resultGolTimeFora: r.score.fulltime.away,
+                //statusJogo: r.fixture.status.long
+                resultGolTimeCasa: r.goals.home,
+                resultGolTimeFora: r.goals.away,
                 statusJogo: r.fixture.status.long
               }
             })
