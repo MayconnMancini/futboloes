@@ -17,7 +17,12 @@ import axios from 'axios'
 async function updatePoints() {
 
   // busca todos os palpites dos bolões
-  const palpites = await prisma.palpite.findMany()
+  const palpites = await prisma.palpite.findMany({
+    where: {
+      pontuacao: null,
+    }
+  }
+  )
   console.log(palpites)
 
   // calcula a pontuação dos palputes
@@ -515,7 +520,7 @@ export async function jogoRoutes(fastify: FastifyInstance) {
 
       jogosBD.map((item) => {
         resp.map(async (r: any) => {
-          if (item.fixtureIdApi == r.fixture.id) {
+          if (item.fixtureIdApi == r.fixture.id && r.fixture.status.elapsed >= 90) {
             console.log("id encontrado")
             console.log(r.fixture.id)
             await prisma.jogo.update({
