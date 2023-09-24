@@ -9,81 +9,10 @@ import utc from 'dayjs/plugin/utc'
 import axios from 'axios'
 
 /*
-  PONTUAÇÃO EXATA : 20 PONTOS
+  PONTUAÇÃO EXATA : 21 PONTOS
   ACERTOU O TIME VITORIOSO: 10 PONTOS
   ACERTOU QUE VAI DAR EMPATE: 10 PONTOS
 */
-
-async function updatePoints() {
-
-  // busca todos os palpites dos bolões
-  const palpites = await prisma.palpite.findMany({
-    where: {
-      pontuacao: null,
-    }
-  }
-  )
-  console.log(palpites)
-
-  // calcula a pontuação dos palputes
-  palpites.map(async (item) => {
-    // para cada palpite retorna os dados do jogo
-    let jogo = await prisma.jogo.findFirst({
-      where: {
-        Jogos_boloes: {
-          some: {
-            id: item.jogoBolao_id
-          }
-        }
-      }
-    })
-
-    // verifica se o jogo tem resultado definido
-    if (jogo?.resultGolTimeCasa != null && jogo?.resultGolTimeFora != null) {
-      // se acertou o placar exato
-      if (item.golTimeCasa === jogo.resultGolTimeCasa && item.golTimeFora === jogo.resultGolTimeFora) {
-        await prisma.palpite.update({
-          where: {
-            id: item.id
-          },
-          data: {
-            pontuacao: 21
-          }
-        })
-      } else {
-        // verifica se o palpite foi de vitória casa, fora ou empate
-        let controlePalpite
-        item.golTimeCasa > item.golTimeFora ? controlePalpite = 2 : item.golTimeCasa < item.golTimeFora ? controlePalpite = 1 : controlePalpite = 0
-
-        // verifica se o placar foi de vitoria casa, fora ou empate
-        let controleResultadoJogo
-        jogo.resultGolTimeCasa > jogo.resultGolTimeFora ? controleResultadoJogo = 2 : jogo.resultGolTimeCasa < jogo.resultGolTimeFora ? controleResultadoJogo = 1 : controleResultadoJogo = 0
-
-        // compara se acertou o vencedor/empate
-
-        if (controlePalpite === controleResultadoJogo) {
-          await prisma.palpite.update({
-            where: {
-              id: item.id
-            },
-            data: {
-              pontuacao: 10
-            }
-          })
-        } else {
-          await prisma.palpite.update({
-            where: {
-              id: item.id
-            },
-            data: {
-              pontuacao: 0
-            }
-          })
-        }
-      }
-    }
-  })
-}
 
 export async function jogoRoutes(fastify: FastifyInstance) {
 
@@ -424,6 +353,8 @@ export async function jogoRoutes(fastify: FastifyInstance) {
 
     const { datas } = getBolaoParams.parse(request.params)
 
+    let originalDate = datas;
+
     try {
       const { data } = await axios(`https://v3.football.api-sports.io/fixtures?date=${datas}&timezone=America/Cuiaba`, {
         method: 'GET',
@@ -436,11 +367,12 @@ export async function jogoRoutes(fastify: FastifyInstance) {
       // salva os dados da resposta do google
       //const jogosData = await jogosResponse.json()
 
-      console.log("############  RESPOSTA ##############");
-      //console.log(data.get);
+
 
       //return data["response"]
       const resp = data["response"];
+      console.log("############  RESPOSTA ##############");
+      //console.log("respo", resp);
 
       //console.log("############  CONVERSÃO ##############");
       //console.log(resp);
@@ -557,7 +489,7 @@ export async function jogoRoutes(fastify: FastifyInstance) {
 
       //console.log(jogosBD)
 
-      await updatePoints()
+      await updatePoints(originalDate)
 
       return { message: "sucesso" }
 
@@ -612,3 +544,91 @@ export async function jogoRoutes(fastify: FastifyInstance) {
   */
 
 }
+
+
+async function updatePoints(date: any) {
+
+  dayjs.extend(utc)
+
+  // busca todos os palpites dos bolões conforme data informada
+  const palpites = await prisma.palpite.findMany({
+    where: {
+      jogoBolao: {
+        jogo: {
+          AND: [
+            {
+              data: {
+                gte: dayjs(date).format()
+              }
+            },
+            {
+              data: {
+                lt: dayjs(date).add(1, 'day').format()
+              }
+            }
+          ]
+        }
+      }
+    }
+  })
+
+  // calcula a pontuação dos palpites
+  palpites.map(async (item) => {
+    // para cada palpite retorna os dados do jogo
+    let jogo = await prisma.jogo.findFirst({
+      where: {
+        Jogos_boloes: {
+          some: {
+            id: item.jogoBolao_id
+          }
+        }
+      }
+    })
+
+    // verifica se o jogo tem resultado definido
+    if (jogo?.resultGolTimeCasa != null && jogo?.resultGolTimeFora != null) {
+      // se acertou o placar exato
+      if (item.golTimeCasa === jogo.resultGolTimeCasa && item.golTimeFora === jogo.resultGolTimeFora) {
+        await prisma.palpite.update({
+          where: {
+            id: item.id
+          },
+          data: {
+            pontuacao: 21
+          }
+        })
+      } else {
+        // verifica se o palpite foi de vitória casa, fora ou empate
+        let controlePalpite
+        item.golTimeCasa > item.golTimeFora ? controlePalpite = 2 : item.golTimeCasa < item.golTimeFora ? controlePalpite = 1 : controlePalpite = 0
+
+        // verifica se o placar foi de vitoria casa, fora ou empate
+        let controleResultadoJogo
+        jogo.resultGolTimeCasa > jogo.resultGolTimeFora ? controleResultadoJogo = 2 : jogo.resultGolTimeCasa < jogo.resultGolTimeFora ? controleResultadoJogo = 1 : controleResultadoJogo = 0
+
+        // compara se acertou o vencedor/empate
+
+        if (controlePalpite === controleResultadoJogo) {
+          await prisma.palpite.update({
+            where: {
+              id: item.id
+            },
+            data: {
+              pontuacao: 10
+            }
+          })
+        } else {
+          await prisma.palpite.update({
+            where: {
+              id: item.id
+            },
+            data: {
+              pontuacao: 0
+            }
+          })
+        }
+      }
+    }
+  })
+}
+
