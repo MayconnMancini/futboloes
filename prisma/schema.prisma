@@ -40,6 +40,9 @@ model Usuario {
   nome      String
   email     String   @unique
   senha     String?
+  cidade    String?
+  estado    String?
+  telefone  String?
   googleId  String?  @unique
   avatarUrl String?
   isAdmin   Boolean  @default(false)

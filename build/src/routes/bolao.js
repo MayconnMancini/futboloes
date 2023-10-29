@@ -368,6 +368,9 @@ async function bolaoRoutes(fastify) {
                     }
                 }
             },
+            orderBy: {
+                createdAt: 'desc'
+            },
             include: {
                 _count: {
                     select: {

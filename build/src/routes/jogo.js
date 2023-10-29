@@ -248,8 +248,8 @@ async function jogoRoutes(fastify) {
             const { data } = await (0, axios_1.default)(`https://v3.football.api-sports.io/fixtures?date=${datas}&timezone=America/Cuiaba`, {
                 method: 'GET',
                 headers: {
-                    'x-apisports-key': 'd6dc32d4aa00641dbed2e29e7350b3fb',
-                    'x-apisports-host': 'v3.football.api-sports.io'
+                    'x-apisports-key': process.env.X_APISPORTS_KEY,
+                    'x-apisports-host': process.env.X_APISPORTS_HOST
                 }
             });
             // salva os dados da resposta do google
@@ -306,8 +306,8 @@ async function jogoRoutes(fastify) {
             const { data } = await (0, axios_1.default)(`https://v3.football.api-sports.io/fixtures?date=${datas}&timezone=America/Cuiaba`, {
                 method: 'GET',
                 headers: {
-                    'x-apisports-key': 'd6dc32d4aa00641dbed2e29e7350b3fb',
-                    'x-apisports-host': 'v3.football.api-sports.io'
+                    'x-apisports-key': process.env.X_APISPORTS_KEY,
+                    'x-apisports-host': process.env.X_APISPORTS_HOST
                 }
             });
             // salva os dados da resposta do google

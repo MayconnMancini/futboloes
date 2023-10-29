@@ -1,5 +1,7 @@
-import * as dotenv from 'dotenv'
-dotenv.config()
+//import * as dotenv from 'dotenv'
+//dotenv.config()
+require('dotenv').config();
+
 import Fastify from "fastify";
 import cors from '@fastify/cors'
 import jwt from "@fastify/jwt";
@@ -13,7 +15,7 @@ import { date } from "zod";
 import { rankingRoutes } from "./routes/ranking";
 
 async function bootstrap() {
-  // cria um log
+
   const fastify = Fastify({
     logger: true,
   })
@@ -22,12 +24,10 @@ async function bootstrap() {
     origin: '*',
   })
 
-  // em produção isso precisa ser uma variável ambiente
   await fastify.register(jwt, {
-    secret: process.env.SECRETJWT || "futboloes",
+    secret: process.env.SECRETJWT || '',
   })
 
-  // importa as rotas
   await fastify.register(bolaoRoutes)
   await fastify.register(authRoutes)
   await fastify.register(jogoRoutes)
@@ -35,7 +35,6 @@ async function bootstrap() {
   await fastify.register(usuarioRoutes)
   await fastify.register(rankingRoutes)
 
-  // servidor escuta na porta 3333
   await fastify.listen({ port: 3333, host: '0.0.0.0' })
 }
 

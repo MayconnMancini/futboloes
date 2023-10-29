@@ -290,8 +290,8 @@ export async function jogoRoutes(fastify: FastifyInstance) {
       const { data } = await axios(`https://v3.football.api-sports.io/fixtures?date=${datas}&timezone=America/Cuiaba`, {
         method: 'GET',
         headers: {
-          'x-apisports-key': 'd6dc32d4aa00641dbed2e29e7350b3fb',
-          'x-apisports-host': 'v3.football.api-sports.io'
+          'x-apisports-key': process.env.X_APISPORTS_KEY,
+          'x-apisports-host': process.env.X_APISPORTS_HOST
         }
       })
 
@@ -359,8 +359,8 @@ export async function jogoRoutes(fastify: FastifyInstance) {
       const { data } = await axios(`https://v3.football.api-sports.io/fixtures?date=${datas}&timezone=America/Cuiaba`, {
         method: 'GET',
         headers: {
-          'x-apisports-key': 'd6dc32d4aa00641dbed2e29e7350b3fb',
-          'x-apisports-host': 'v3.football.api-sports.io'
+          'x-apisports-key': process.env.X_APISPORTS_KEY,
+          'x-apisports-host': process.env.X_APISPORTS_HOST
         }
       })
 

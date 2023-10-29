@@ -28,7 +28,7 @@ async function palpiteRoutes(fastify) {
         });
         const { bolao_id, jogo_id } = createPalpiteParams.parse(request.params);
         const { golTimeCasa, golTimeFora } = createPalpiteBody.parse(request.body);
-        // verifica se o usupario faz parte do bolão
+        // verifica se o usuario faz parte do bolão
         const participante = await prisma_1.prisma.participante.findUnique({
             where: {
                 usuario_id_bolao_id: {

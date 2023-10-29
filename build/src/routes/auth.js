@@ -12,9 +12,24 @@ async function authRoutes(fastify) {
     fastify.get('/me', {
         onRequest: [authenticate_1.authenticate]
     }, async (request) => {
-        console.log("user => " + request.user.isAdmin);
-        console.log("request => " + request);
-        return { user: request.user };
+        let user = await prisma_1.prisma.usuario.findFirst({
+            where: {
+                id: Number(request.user.sub)
+            },
+            select: {
+                id: true,
+                nome: true,
+                email: true,
+                cidade: true,
+                estado: true,
+                telefone: true,
+                googleId: true,
+                avatarUrl: true,
+                isAdmin: true,
+                createdAt: true
+            }
+        });
+        return { user: user };
     });
     fastify.post('/newPassword', {
         onRequest: [authenticate_1.authenticate]
@@ -22,25 +37,8 @@ async function authRoutes(fastify) {
         try {
             const loginBody = zod_1.z.object({
                 email: zod_1.z.string().email(),
-                senha: zod_1.z.string(),
+                senha: zod_1.z.string()
             });
-            let user = await prisma_1.prisma.usuario.findFirst({
-                where: {
-                    id: parseInt(request.user.sub)
-                }
-            });
-            if (!user) {
-                return reply.status(400).send({
-                    message: 'Não autenticado'
-                });
-            }
-            else {
-                if (!user.isAdmin) {
-                    return reply.status(400).send({
-                        message: 'Sem permissão'
-                    });
-                }
-            }
             const { email, senha } = loginBody.parse(request.body);
             let usuario = await prisma_1.prisma.usuario.findFirst({
                 where: {
@@ -52,9 +50,13 @@ async function authRoutes(fastify) {
                     message: 'Email não cadastrado'
                 });
             }
+            if (usuario.id != parseInt(request.user.sub) && request.user.isAdmin === false) {
+                return reply.status(400).send({
+                    message: 'Sem permissão para editar informações'
+                });
+            }
             if (senha != null) {
                 const hashPassword = await bcrypt_1.default.hash(senha, 10);
-                console.log(hashPassword);
                 await prisma_1.prisma.usuario.update({
                     where: {
                         email: email
@@ -70,6 +72,9 @@ async function authRoutes(fastify) {
         }
         catch (error) {
             console.log(error);
+            return reply.status(500).send({
+                message: `Erro interno do servidor -> ${error}`
+            });
         }
     });
     fastify.post('/login', async (request, reply) => {
@@ -94,9 +99,9 @@ async function authRoutes(fastify) {
                 if (await bcrypt_1.default.compare(senha, usuario.senha)) {
                     // cria Token JWT
                     const token = fastify.jwt.sign({
-                        name: usuario.nome,
-                        avatarUrl: usuario.avatarUrl,
-                        isAdmin: usuario.isAdmin
+                    //name: usuario.nome,
+                    //avatarUrl: usuario.avatarUrl,
+                    //isAdmin: usuario.isAdmin
                     }, {
                         sub: usuario.id.toString(),
                         expiresIn: '7 days'
@@ -123,8 +128,11 @@ async function authRoutes(fastify) {
                 nome: zod_1.z.string(),
                 email: zod_1.z.string().email(),
                 senha: zod_1.z.string(),
+                cidade: zod_1.z.string(),
+                estado: zod_1.z.string(),
+                telefone: zod_1.z.string(),
             });
-            const { nome, email, senha } = signupBody.parse(request.body);
+            const { nome, email, senha, cidade, estado, telefone } = signupBody.parse(request.body);
             let usuario = await prisma_1.prisma.usuario.findFirst({
                 where: {
                     email: email
@@ -136,12 +144,14 @@ async function authRoutes(fastify) {
                 });
             }
             const hashPassword = await bcrypt_1.default.hash(senha, 10);
-            console.log(hashPassword);
             usuario = await prisma_1.prisma.usuario.create({
                 data: {
                     nome: nome,
                     email: email,
-                    senha: hashPassword
+                    senha: hashPassword,
+                    cidade: cidade,
+                    estado: estado,
+                    telefone: telefone
                 }
             });
             return reply.status(201).send({

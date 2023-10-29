@@ -9,9 +9,26 @@ export async function authRoutes(fastify: FastifyInstance) {
   fastify.get('/me', {
     onRequest: [authenticate]
   }, async (request) => {
-    console.log("user => " + request.user.isAdmin)
-    console.log("request => " + request)
-    return { user: request.user }
+
+    let user = await prisma.usuario.findFirst({
+      where: {
+        id: Number(request.user.sub)
+      },
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        cidade: true,
+        estado: true,
+        telefone: true,
+        googleId: true,
+        avatarUrl: true,
+        isAdmin: true,
+        createdAt: true
+      }
+    })
+
+    return { user: user }
   })
 
   fastify.post('/newPassword', {
@@ -20,27 +37,8 @@ export async function authRoutes(fastify: FastifyInstance) {
     try {
       const loginBody = z.object({
         email: z.string().email(),
-        senha: z.string(),
+        senha: z.string()
       })
-
-      let user = await prisma.usuario.findFirst({
-        where: {
-          id: parseInt(request.user.sub)
-        }
-      })
-
-      if (!user) {
-        return reply.status(400).send({
-          message: 'Não autenticado'
-        });
-      }
-      else {
-        if (!user.isAdmin) {
-          return reply.status(400).send({
-            message: 'Sem permissão'
-          })
-        }
-      }
 
       const { email, senha } = loginBody.parse(request.body)
 
@@ -56,12 +54,15 @@ export async function authRoutes(fastify: FastifyInstance) {
         })
       }
 
+      if (usuario.id != parseInt(request.user.sub) && request.user.isAdmin === false) {
+        return reply.status(400).send({
+          message: 'Sem permissão para editar informações'
+        })
+      }
+
       if (senha != null) {
 
         const hashPassword = await bcrypt.hash(senha, 10)
-
-        console.log(hashPassword)
-
         await prisma.usuario.update({
           where: {
             email: email
@@ -77,6 +78,9 @@ export async function authRoutes(fastify: FastifyInstance) {
       }
     } catch (error) {
       console.log(error)
+      return reply.status(500).send({
+        message: `Erro interno do servidor -> ${error}`
+      });
     }
   })
 
@@ -107,9 +111,9 @@ export async function authRoutes(fastify: FastifyInstance) {
         if (await bcrypt.compare(senha, usuario.senha)) {
           // cria Token JWT
           const token = fastify.jwt.sign({
-            name: usuario.nome,
-            avatarUrl: usuario.avatarUrl,
-            isAdmin: usuario.isAdmin
+            //name: usuario.nome,
+            //avatarUrl: usuario.avatarUrl,
+            //isAdmin: usuario.isAdmin
           }, {
             sub: usuario.id.toString(),
             expiresIn: '7 days'
@@ -138,9 +142,12 @@ export async function authRoutes(fastify: FastifyInstance) {
         nome: z.string(),
         email: z.string().email(),
         senha: z.string(),
+        cidade: z.string(),
+        estado: z.string(),
+        telefone: z.string(),
       })
 
-      const { nome, email, senha } = signupBody.parse(request.body)
+      const { nome, email, senha, cidade, estado, telefone } = signupBody.parse(request.body)
 
       let usuario = await prisma.usuario.findFirst({
         where: {
@@ -154,16 +161,16 @@ export async function authRoutes(fastify: FastifyInstance) {
         })
       }
 
-
       const hashPassword = await bcrypt.hash(senha, 10)
-
-      console.log(hashPassword)
 
       usuario = await prisma.usuario.create({
         data: {
           nome: nome,
           email: email,
-          senha: hashPassword
+          senha: hashPassword,
+          cidade: cidade,
+          estado: estado,
+          telefone: telefone
         }
       })
 

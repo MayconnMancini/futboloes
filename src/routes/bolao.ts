@@ -426,6 +426,9 @@ export async function bolaoRoutes(fastify: FastifyInstance) {
           }
         }
       },
+      orderBy: {
+        createdAt: 'desc'
+      },
       include: {
         _count: {
           select: {
