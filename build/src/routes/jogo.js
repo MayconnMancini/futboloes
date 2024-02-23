@@ -314,8 +314,8 @@ async function jogoRoutes(fastify) {
             //const jogosData = await jogosResponse.json()
             //return data["response"]
             const resp = data["response"];
-            console.log("############  RESPOSTA ##############");
-            //console.log("respo", resp);
+            //console.log("############  RESPOSTA ##############");
+            //console.log("resp jogos", resp);
             //console.log("############  CONVERSÃO ##############");
             //console.log(resp);
             /*
@@ -349,15 +349,15 @@ async function jogoRoutes(fastify) {
             //let lastDay = new Date(datas);
             //console.log(new Date("2023-01-13").toDateString())
             dayjs_1.default.extend(utc_1.default);
-            console.log(datas);
+            //console.log(datas);
             //console.log(dayjs(datas))
-            console.log((0, dayjs_1.default)("2023-01-12").format());
-            console.log((0, dayjs_1.default)("2023-01-13").format());
-            console.log((0, dayjs_1.default)().format());
-            console.log(dayjs_1.default.utc(datas).format());
-            console.log("==========================");
-            console.log((0, dayjs_1.default)(datas).format());
-            console.log((0, dayjs_1.default)(datas).add(1, "day").format());
+            //console.log(dayjs("2023-01-12").format());
+            //console.log(dayjs("2023-01-13").format());
+            //console.log(dayjs().format());
+            //console.log(dayjs.utc(datas).format());
+            //console.log("==========================");
+            //console.log(dayjs(datas).format());
+            //console.log(dayjs(datas).add(1, "day").format());
             //console.log(new Date("2023-01-13").toISOString());
             // datas no banco de dados são salvas em formato UTC. Entao deve-se usar essa estrategia para retornar
             // os jogos do dia conforme localtime do usuário.
@@ -384,12 +384,13 @@ async function jogoRoutes(fastify) {
                     ],
                 },
             });
+            //console.log("jogos bd", jogosBD);
             jogosBD.map((item) => {
                 resp.map(async (r) => {
                     if (item.fixtureIdApi == r.fixture.id &&
                         r.fixture.status.elapsed >= 90) {
-                        console.log("id encontrado");
-                        console.log(r.fixture.id);
+                        //console.log("id encontrado");
+                        //console.log(r.fixture.id);
                         await prisma_1.prisma.jogo.update({
                             where: {
                                 id: item.id,

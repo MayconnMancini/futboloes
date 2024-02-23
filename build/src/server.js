@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 //import * as dotenv from 'dotenv'
 //dotenv.config()
-require('dotenv').config();
+require("dotenv").config();
 const fastify_1 = __importDefault(require("fastify"));
 const cors_1 = __importDefault(require("@fastify/cors"));
 const jwt_1 = __importDefault(require("@fastify/jwt"));
@@ -17,13 +17,13 @@ const usuario_1 = require("./routes/usuario");
 const ranking_1 = require("./routes/ranking");
 async function bootstrap() {
     const fastify = (0, fastify_1.default)({
-        logger: true,
+    //logger: true,
     });
     await fastify.register(cors_1.default, {
-        origin: '*',
+        origin: "*",
     });
     await fastify.register(jwt_1.default, {
-        secret: process.env.SECRETJWT || '',
+        secret: process.env.SECRETJWT || "",
     });
     await fastify.register(bolao_1.bolaoRoutes);
     await fastify.register(auth_1.authRoutes);
@@ -31,6 +31,6 @@ async function bootstrap() {
     await fastify.register(palpite_1.palpiteRoutes);
     await fastify.register(usuario_1.usuarioRoutes);
     await fastify.register(ranking_1.rankingRoutes);
-    await fastify.listen({ port: 3333, host: '0.0.0.0' });
+    await fastify.listen({ port: 3333, host: "0.0.0.0" });
 }
 bootstrap();

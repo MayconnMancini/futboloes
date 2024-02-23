@@ -13,8 +13,8 @@ async function main() {
     });
     const bolao = await prisma.bolao.create({
         data: {
-            nome: 'Bolão da Firma',
-            codigo: 'BOL123',
+            nome: "Bolão da Firma",
+            codigo: "BOL123",
             donoBolaoId: usuario.id,
             /*
             participantes: {
@@ -29,28 +29,28 @@ async function main() {
         data: {
             bolao_id: bolao.id,
             usuario_id: usuario.id,
-        }
+        },
     });
     await prisma.jogo.create({
         data: {
-            data: '2022-12-29T15:00:00.535Z',
-            timeCasa: 'FLAMENGO',
-            timeFora: 'AVAÍ',
-            competicao: 'BRASILEIRÃO',
-            logoTimeCasa: 'https://media.api-sports.io/football/teams/127.png',
-            logoTimeFora: 'https://media.api-sports.io/football/teams/145.png',
+            data: "2022-12-29T15:00:00.535Z",
+            timeCasa: "FLAMENGO",
+            timeFora: "AVAÍ",
+            competicao: "BRASILEIRÃO",
+            logoTimeCasa: "https://media.api-sports.io/football/teams/127.png",
+            logoTimeFora: "https://media.api-sports.io/football/teams/145.png",
             resultGolTimeCasa: null,
             resultGolTimeFora: null,
         },
     });
     const jogo = await prisma.jogo.create({
         data: {
-            data: '2022-12-31T15:00:00.535Z',
-            timeCasa: 'FLAMENGO',
-            timeFora: 'SÃO PAULO',
-            competicao: 'BRASILEIRÃO',
-            logoTimeCasa: 'https://media.api-sports.io/football/teams/127.png',
-            logoTimeFora: 'https://media.api-sports.io/football/teams/140.png',
+            data: "2022-12-31T15:00:00.535Z",
+            timeCasa: "FLAMENGO",
+            timeFora: "SÃO PAULO",
+            competicao: "BRASILEIRÃO",
+            logoTimeCasa: "https://media.api-sports.io/football/teams/127.png",
+            logoTimeFora: "https://media.api-sports.io/football/teams/140.png",
             resultGolTimeCasa: null,
             resultGolTimeFora: null,
             /*
@@ -82,16 +82,16 @@ async function main() {
     const jogo_bolao = await prisma.jogo_bolao.create({
         data: {
             jogo_id: jogo.id,
-            bolao_id: bolao.id
-        }
+            bolao_id: bolao.id,
+        },
     });
     await prisma.palpite.create({
         data: {
             golTimeCasa: 2,
             golTimeFora: 0,
             participante_id: participante.id,
-            jogoBolao_id: jogo_bolao.id
-        }
+            jogoBolao_id: jogo_bolao.id,
+        },
     });
 }
-main();
+//main()

@@ -394,8 +394,8 @@ export async function jogoRoutes(fastify: FastifyInstance) {
 
         //return data["response"]
         const resp = data["response"];
-        console.log("############  RESPOSTA ##############");
-        //console.log("respo", resp);
+        //console.log("############  RESPOSTA ##############");
+        //console.log("resp jogos", resp);
 
         //console.log("############  CONVERSÃO ##############");
         //console.log(resp);
@@ -434,15 +434,15 @@ export async function jogoRoutes(fastify: FastifyInstance) {
         //console.log(new Date("2023-01-13").toDateString())
 
         dayjs.extend(utc);
-        console.log(datas);
+        //console.log(datas);
         //console.log(dayjs(datas))
-        console.log(dayjs("2023-01-12").format());
-        console.log(dayjs("2023-01-13").format());
-        console.log(dayjs().format());
-        console.log(dayjs.utc(datas).format());
-        console.log("==========================");
-        console.log(dayjs(datas).format());
-        console.log(dayjs(datas).add(1, "day").format());
+        //console.log(dayjs("2023-01-12").format());
+        //console.log(dayjs("2023-01-13").format());
+        //console.log(dayjs().format());
+        //console.log(dayjs.utc(datas).format());
+        //console.log("==========================");
+        //console.log(dayjs(datas).format());
+        //console.log(dayjs(datas).add(1, "day").format());
 
         //console.log(new Date("2023-01-13").toISOString());
 
@@ -473,14 +473,16 @@ export async function jogoRoutes(fastify: FastifyInstance) {
           },
         });
 
+        //console.log("jogos bd", jogosBD);
+
         jogosBD.map((item) => {
           resp.map(async (r: any) => {
             if (
               item.fixtureIdApi == r.fixture.id &&
               r.fixture.status.elapsed >= 90
             ) {
-              console.log("id encontrado");
-              console.log(r.fixture.id);
+              //console.log("id encontrado");
+              //console.log(r.fixture.id);
               await prisma.jogo.update({
                 where: {
                   id: item.id,

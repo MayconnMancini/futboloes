@@ -1,9 +1,9 @@
 //import * as dotenv from 'dotenv'
 //dotenv.config()
-require('dotenv').config();
+require("dotenv").config();
 
 import Fastify from "fastify";
-import cors from '@fastify/cors'
+import cors from "@fastify/cors";
 import jwt from "@fastify/jwt";
 
 import { bolaoRoutes } from "./routes/bolao";
@@ -15,27 +15,26 @@ import { date } from "zod";
 import { rankingRoutes } from "./routes/ranking";
 
 async function bootstrap() {
-
   const fastify = Fastify({
-    logger: true,
-  })
+    //logger: true,
+  });
 
   await fastify.register(cors, {
-    origin: '*',
-  })
+    origin: "*",
+  });
 
   await fastify.register(jwt, {
-    secret: process.env.SECRETJWT || '',
-  })
+    secret: process.env.SECRETJWT || "",
+  });
 
-  await fastify.register(bolaoRoutes)
-  await fastify.register(authRoutes)
-  await fastify.register(jogoRoutes)
-  await fastify.register(palpiteRoutes)
-  await fastify.register(usuarioRoutes)
-  await fastify.register(rankingRoutes)
+  await fastify.register(bolaoRoutes);
+  await fastify.register(authRoutes);
+  await fastify.register(jogoRoutes);
+  await fastify.register(palpiteRoutes);
+  await fastify.register(usuarioRoutes);
+  await fastify.register(rankingRoutes);
 
-  await fastify.listen({ port: 3333, host: '0.0.0.0' })
+  await fastify.listen({ port: 3333, host: "0.0.0.0" });
 }
 
-bootstrap()
+bootstrap();
