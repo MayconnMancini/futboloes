@@ -91,6 +91,7 @@ model Palpite {
   golTimeFora     Int
   createdAt       DateTime @default(now())
   updatedAt       DateTime? @updatedAt
+  updatedPalpiteTime       DateTime? 
   pontuacao       Int?
   jogoBolao_id    Int
   participante_id Int

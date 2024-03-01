@@ -104,7 +104,7 @@ async function palpiteRoutes(fastify) {
                 update: {
                     golTimeCasa,
                     golTimeFora,
-                    updatedAt: new Date(),
+                    updatedPalpiteTime: new Date(),
                 },
                 create: {
                     jogoBolao_id: jogoBolao.id,
@@ -183,6 +183,7 @@ async function palpiteRoutes(fastify) {
                     },
                     createdAt: true,
                     updatedAt: true,
+                    updatedPalpiteTime: true,
                 },
             });
             return { palpites };
