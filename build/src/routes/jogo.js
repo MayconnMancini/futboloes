@@ -384,13 +384,13 @@ async function jogoRoutes(fastify) {
                     ],
                 },
             });
-            //console.log("jogos bd", jogosBD);
-            jogosBD.map((item) => {
+            console.log("jogos bd", jogosBD.length);
+            jogosBD.map(async (item) => {
                 resp.map(async (r) => {
                     if (item.fixtureIdApi == r.fixture.id &&
                         r.fixture.status.elapsed >= 90) {
-                        //console.log("id encontrado");
-                        //console.log(r.fixture.id);
+                        console.log("id encontrado", item);
+                        console.log(r.fixture.id);
                         await prisma_1.prisma.jogo.update({
                             where: {
                                 id: item.id,
@@ -493,9 +493,7 @@ async function updatePoints(date) {
             },
         },
     });
-    // calcula a pontuação dos palpites
     palpites.map(async (item) => {
-        // para cada palpite retorna os dados do jogo
         let jogo = await prisma_1.prisma.jogo.findFirst({
             where: {
                 Jogos_boloes: {
@@ -505,57 +503,104 @@ async function updatePoints(date) {
                 },
             },
         });
-        // verifica se o jogo tem resultado definido
         if (jogo?.resultGolTimeCasa != null && jogo?.resultGolTimeFora != null) {
-            // se acertou o placar exato
+            let pontuacao = 0;
             if (item.golTimeCasa === jogo.resultGolTimeCasa &&
                 item.golTimeFora === jogo.resultGolTimeFora) {
-                await prisma_1.prisma.palpite.update({
-                    where: {
-                        id: item.id,
-                    },
-                    data: {
-                        pontuacao: 21,
-                    },
-                });
+                pontuacao = 21;
             }
             else {
-                // verifica se o palpite foi de vitória casa, fora ou empate
-                let controlePalpite;
-                item.golTimeCasa > item.golTimeFora
-                    ? (controlePalpite = 2)
+                let controlePalpite = item.golTimeCasa > item.golTimeFora
+                    ? 2
                     : item.golTimeCasa < item.golTimeFora
-                        ? (controlePalpite = 1)
-                        : (controlePalpite = 0);
-                // verifica se o placar foi de vitoria casa, fora ou empate
-                let controleResultadoJogo;
-                jogo.resultGolTimeCasa > jogo.resultGolTimeFora
-                    ? (controleResultadoJogo = 2)
+                        ? 1
+                        : 0;
+                let controleResultadoJogo = jogo.resultGolTimeCasa > jogo.resultGolTimeFora
+                    ? 2
                     : jogo.resultGolTimeCasa < jogo.resultGolTimeFora
-                        ? (controleResultadoJogo = 1)
-                        : (controleResultadoJogo = 0);
-                // compara se acertou o vencedor/empate
-                if (controlePalpite === controleResultadoJogo) {
-                    await prisma_1.prisma.palpite.update({
-                        where: {
-                            id: item.id,
-                        },
-                        data: {
-                            pontuacao: 10,
-                        },
-                    });
-                }
-                else {
-                    await prisma_1.prisma.palpite.update({
-                        where: {
-                            id: item.id,
-                        },
-                        data: {
-                            pontuacao: 0,
-                        },
-                    });
-                }
+                        ? 1
+                        : 0;
+                pontuacao = controlePalpite === controleResultadoJogo ? 10 : 0;
             }
+            await prisma_1.prisma.palpite.update({
+                where: {
+                    id: item.id,
+                },
+                data: {
+                    pontuacao: pontuacao,
+                },
+            });
         }
     });
+    /*
+    // calcula a pontuação dos palpites
+    palpites.map(async (item) => {
+      // para cada palpite retorna os dados do jogo
+      let jogo = await prisma.jogo.findFirst({
+        where: {
+          Jogos_boloes: {
+            some: {
+              id: item.jogoBolao_id,
+            },
+          },
+        },
+      });
+  
+      // verifica se o jogo tem resultado definido
+      if (jogo?.resultGolTimeCasa != null && jogo?.resultGolTimeFora != null) {
+        // se acertou o placar exato
+        if (
+          item.golTimeCasa === jogo.resultGolTimeCasa &&
+          item.golTimeFora === jogo.resultGolTimeFora
+        ) {
+          await prisma.palpite.update({
+            where: {
+              id: item.id,
+            },
+            data: {
+              pontuacao: 21,
+            },
+          });
+        } else {
+          // verifica se o palpite foi de vitória casa, fora ou empate
+          let controlePalpite;
+          item.golTimeCasa > item.golTimeFora
+            ? (controlePalpite = 2)
+            : item.golTimeCasa < item.golTimeFora
+            ? (controlePalpite = 1)
+            : (controlePalpite = 0);
+  
+          // verifica se o placar foi de vitoria casa, fora ou empate
+          let controleResultadoJogo;
+          jogo.resultGolTimeCasa > jogo.resultGolTimeFora
+            ? (controleResultadoJogo = 2)
+            : jogo.resultGolTimeCasa < jogo.resultGolTimeFora
+            ? (controleResultadoJogo = 1)
+            : (controleResultadoJogo = 0);
+  
+          // compara se acertou o vencedor/empate
+  
+          if (controlePalpite === controleResultadoJogo) {
+            await prisma.palpite.update({
+              where: {
+                id: item.id,
+              },
+              data: {
+                pontuacao: 10,
+              },
+            });
+          } else {
+            await prisma.palpite.update({
+              where: {
+                id: item.id,
+              },
+              data: {
+                pontuacao: 0,
+              },
+            });
+          }
+        }
+      }
+    });
+    */
 }
