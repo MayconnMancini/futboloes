@@ -473,16 +473,16 @@ export async function jogoRoutes(fastify: FastifyInstance) {
           },
         });
 
-        //console.log("jogos bd", jogosBD);
+        console.log("jogos bd", jogosBD.length);
 
-        jogosBD.map((item) => {
+        jogosBD.map(async (item: any) => {
           resp.map(async (r: any) => {
             if (
               item.fixtureIdApi == r.fixture.id &&
               r.fixture.status.elapsed >= 90
             ) {
-              //console.log("id encontrado");
-              //console.log(r.fixture.id);
+              console.log("id encontrado", item);
+              console.log(r.fixture.id);
               await prisma.jogo.update({
                 where: {
                   id: item.id,
@@ -593,6 +593,55 @@ async function updatePoints(date: any) {
     },
   });
 
+  palpites.map(async (item) => {
+    let jogo = await prisma.jogo.findFirst({
+      where: {
+        Jogos_boloes: {
+          some: {
+            id: item.jogoBolao_id,
+          },
+        },
+      },
+    });
+
+    if (jogo?.resultGolTimeCasa != null && jogo?.resultGolTimeFora != null) {
+      let pontuacao = 0;
+
+      if (
+        item.golTimeCasa === jogo.resultGolTimeCasa &&
+        item.golTimeFora === jogo.resultGolTimeFora
+      ) {
+        pontuacao = 21;
+      } else {
+        let controlePalpite =
+          item.golTimeCasa > item.golTimeFora
+            ? 2
+            : item.golTimeCasa < item.golTimeFora
+            ? 1
+            : 0;
+
+        let controleResultadoJogo =
+          jogo.resultGolTimeCasa > jogo.resultGolTimeFora
+            ? 2
+            : jogo.resultGolTimeCasa < jogo.resultGolTimeFora
+            ? 1
+            : 0;
+
+        pontuacao = controlePalpite === controleResultadoJogo ? 10 : 0;
+      }
+
+      await prisma.palpite.update({
+        where: {
+          id: item.id,
+        },
+        data: {
+          pontuacao: pontuacao,
+        },
+      });
+    }
+  });
+
+  /*
   // calcula a pontuação dos palpites
   palpites.map(async (item) => {
     // para cada palpite retorna os dados do jogo
@@ -662,4 +711,5 @@ async function updatePoints(date: any) {
       }
     }
   });
+  */
 }
