@@ -456,6 +456,10 @@ export async function jogoRoutes(fastify: FastifyInstance) {
         // + 1 dia.
         //jogos do dia 2023-01-12. Converte para (maior ou igual à) 2023-01-12+04:00 e (menor que) 2023-01-13T04:00 == 2023-01-12T04:00 à 2023-01-13T03:59
         //
+
+        console.log("DATE INICIAL -> ", dayjs(datas).format());
+        console.log("DATE FINAL -> ", dayjs(datas).add(1, "day").format());
+
         const jogosBD = await prisma.jogo.findMany({
           where: {
             AND: [
