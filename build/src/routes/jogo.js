@@ -368,19 +368,29 @@ async function jogoRoutes(fastify) {
             // + 1 dia.
             //jogos do dia 2023-01-12. Converte para (maior ou igual à) 2023-01-12+04:00 e (menor que) 2023-01-13T04:00 == 2023-01-12T04:00 à 2023-01-13T03:59
             //
-            console.log("DATE INICIAL -> ", (0, dayjs_1.default)(datas).format());
-            console.log("DATE FINAL -> ", (0, dayjs_1.default)(datas).add(1, "day").format());
+            // Crie a data inicial em UTC
+            const dateInicial = dayjs_1.default.utc(datas);
+            console.log("DATE INICIAL (UTC) -> ", dateInicial.format());
+            // Adicione um deslocamento de +4 horas
+            const dateInicialComUTC4 = dateInicial.add(4, "hour");
+            console.log("DATE INICIAL (UTC+4) -> ", dateInicialComUTC4.format());
+            // Crie a data final adicionando 1 dia em UTC
+            const dateFinal = dateInicial.add(1, "day");
+            console.log("DATE FINAL (UTC) -> ", dateFinal.format());
+            // Adicione um deslocamento de +4 horas
+            const dateFinalComUTC4 = dateFinal.add(4, "hour");
+            console.log("DATE FINAL (UTC+4) -> ", dateFinalComUTC4.format());
             const jogosBD = await prisma_1.prisma.jogo.findMany({
                 where: {
                     AND: [
                         {
                             data: {
-                                gte: (0, dayjs_1.default)(datas).format(),
+                                gte: dateInicialComUTC4.format(),
                             },
                         },
                         {
                             data: {
-                                lt: (0, dayjs_1.default)(datas).add(1, "day").format(),
+                                lt: dateFinalComUTC4.format(),
                             },
                         },
                     ],
@@ -427,6 +437,7 @@ async function jogoRoutes(fastify) {
         }
         catch (error) {
             console.log(error);
+            return { message: { error } };
         }
     });
     // lista jogos cadastrados do bolão
@@ -604,4 +615,7 @@ async function updatePoints(date) {
       }
     });
     */
+}
+function Now() {
+    throw new Error("Function not implemented.");
 }

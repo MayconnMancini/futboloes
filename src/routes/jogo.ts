@@ -457,20 +457,33 @@ export async function jogoRoutes(fastify: FastifyInstance) {
         //jogos do dia 2023-01-12. Converte para (maior ou igual à) 2023-01-12+04:00 e (menor que) 2023-01-13T04:00 == 2023-01-12T04:00 à 2023-01-13T03:59
         //
 
-        console.log("DATE INICIAL -> ", dayjs(datas).format());
-        console.log("DATE FINAL -> ", dayjs(datas).add(1, "day").format());
+        // Crie a data inicial em UTC
+        const dateInicial = dayjs.utc(datas);
+        console.log("DATE INICIAL (UTC) -> ", dateInicial.format());
+
+        // Adicione um deslocamento de +4 horas
+        const dateInicialComUTC4 = dateInicial.add(4, "hour");
+        console.log("DATE INICIAL (UTC+4) -> ", dateInicialComUTC4.format());
+
+        // Crie a data final adicionando 1 dia em UTC
+        const dateFinal = dateInicial.add(1, "day");
+        console.log("DATE FINAL (UTC) -> ", dateFinal.format());
+
+        // Adicione um deslocamento de +4 horas
+        const dateFinalComUTC4 = dateFinal.add(4, "hour");
+        console.log("DATE FINAL (UTC+4) -> ", dateFinalComUTC4.format());
 
         const jogosBD = await prisma.jogo.findMany({
           where: {
             AND: [
               {
                 data: {
-                  gte: dayjs(datas).format(),
+                  gte: dateInicialComUTC4.format(),
                 },
               },
               {
                 data: {
-                  lt: dayjs(datas).add(1, "day").format(),
+                  lt: dateFinalComUTC4.format(),
                 },
               },
             ],
@@ -528,6 +541,7 @@ export async function jogoRoutes(fastify: FastifyInstance) {
         return { message: "sucesso" };
       } catch (error) {
         console.log(error);
+        return { message: { error } };
       }
     }
   );
@@ -718,4 +732,7 @@ async function updatePoints(date: any) {
     }
   });
   */
+}
+function Now(): any {
+  throw new Error("Function not implemented.");
 }
