@@ -475,30 +475,32 @@ export async function jogoRoutes(fastify: FastifyInstance) {
 
         console.log("jogos bd", jogosBD.length);
 
-        jogosBD.map(async (item: any) => {
-          resp.map(async (r: any) => {
-            if (
-              item.fixtureIdApi == r.fixture.id &&
+        const updatejogos = jogosBD.map(async (item: any) => {
+          const matchingResponse = resp.find(
+            (r: any) =>
+              item.fixtureIdApi === r.fixture.id &&
               r.fixture.status.elapsed >= 90
-            ) {
-              console.log("id encontrado", item);
-              console.log(r.fixture.id);
-              await prisma.jogo.update({
-                where: {
-                  id: item.id,
-                },
-                data: {
-                  resultGolTimeCasa: r.score.fulltime.home,
-                  resultGolTimeFora: r.score.fulltime.away,
-                  statusJogo: r.fixture.status.long,
-                  //resultGolTimeCasa: r.goals.home,
-                  //resultGolTimeFora: r.goals.away,
-                  //statusJogo: r.fixture.status.long
-                },
-              });
-            }
-          });
+          );
+
+          if (matchingResponse) {
+            console.log("ID encontrado ->");
+            await prisma.jogo.update({
+              where: {
+                id: item.id,
+              },
+              data: {
+                resultGolTimeCasa: matchingResponse.score.fulltime.home,
+                resultGolTimeFora: matchingResponse.score.fulltime.away,
+                statusJogo: matchingResponse.fixture.status.long,
+                //resultGolTimeCasa: matchingResponse.goals.home,
+                //resultGolTimeFora: matchingResponse.goals.away,
+                //statusJogo: matchingResponse.fixture.status.long
+              },
+            });
+          }
         });
+
+        await Promise.all(updatejogos);
 
         // SALVA O RESULTADO DOS JOGOS - FORMA CONVENCIONAL
         //jogosBD.forEach(item => {

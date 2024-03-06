@@ -385,28 +385,27 @@ async function jogoRoutes(fastify) {
                 },
             });
             console.log("jogos bd", jogosBD.length);
-            jogosBD.map(async (item) => {
-                resp.map(async (r) => {
-                    if (item.fixtureIdApi == r.fixture.id &&
-                        r.fixture.status.elapsed >= 90) {
-                        console.log("id encontrado", item);
-                        console.log(r.fixture.id);
-                        await prisma_1.prisma.jogo.update({
-                            where: {
-                                id: item.id,
-                            },
-                            data: {
-                                resultGolTimeCasa: r.score.fulltime.home,
-                                resultGolTimeFora: r.score.fulltime.away,
-                                statusJogo: r.fixture.status.long,
-                                //resultGolTimeCasa: r.goals.home,
-                                //resultGolTimeFora: r.goals.away,
-                                //statusJogo: r.fixture.status.long
-                            },
-                        });
-                    }
-                });
+            const updatejogos = jogosBD.map(async (item) => {
+                const matchingResponse = resp.find((r) => item.fixtureIdApi === r.fixture.id &&
+                    r.fixture.status.elapsed >= 90);
+                if (matchingResponse) {
+                    console.log("ID encontrado ->");
+                    await prisma_1.prisma.jogo.update({
+                        where: {
+                            id: item.id,
+                        },
+                        data: {
+                            resultGolTimeCasa: matchingResponse.score.fulltime.home,
+                            resultGolTimeFora: matchingResponse.score.fulltime.away,
+                            statusJogo: matchingResponse.fixture.status.long,
+                            //resultGolTimeCasa: matchingResponse.goals.home,
+                            //resultGolTimeFora: matchingResponse.goals.away,
+                            //statusJogo: matchingResponse.fixture.status.long
+                        },
+                    });
+                }
             });
+            await Promise.all(updatejogos);
             // SALVA O RESULTADO DOS JOGOS - FORMA CONVENCIONAL
             //jogosBD.forEach(item => {
             //  resp.forEach((r: any) => {
