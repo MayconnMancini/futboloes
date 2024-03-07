@@ -48,6 +48,50 @@ export async function rankingRoutes(fastify: FastifyInstance) {
       let ranking;
       if (participantes) {
         ranking = participantes.map((p) => {
+          const palpites = p.palpites || [];
+
+          const totalPontos = palpites
+            .filter((palpite) => palpite.pontuacao !== null)
+            .reduce((acc, palpite) => acc + Number(palpite.pontuacao), 0);
+
+          const exato = palpites.filter((palpite) => palpite.pontuacao === 21).length;
+
+          const vencedorEmpate = palpites.filter((palpite) => palpite.pontuacao === 10).length;
+
+          const errado = palpites.filter((palpite) => palpite.pontuacao === 0).length;
+
+          return {
+            id_participante: p.id,
+            bolao_id: p.bolao_id,
+            ...p.usuario,
+            totalPontos,
+            exato,
+            vencedorEmpate,
+            errado,
+          };
+        });
+      }
+
+      return ranking?.sort((c1: any, c2: any) => {
+        if (c1.totalPontos !== c2.totalPontos) {
+          return c1.totalPontos < c2.totalPontos ? 1 : -1;
+        }
+
+        if (c1.exato !== c2.exato) {
+          return c1.exato < c2.exato ? 1 : -1;
+        }
+
+        if (c1.vencedorEmpate !== c2.vencedorEmpate) {
+          return c1.vencedorEmpate < c2.vencedorEmpate ? 1 : -1;
+        }
+
+        return 0; // Retorna 0 se todas as propriedades forem iguais
+      });
+
+      /*
+      let ranking;
+      if (participantes) {
+        ranking = participantes.map((p) => {
           let sum = 0;
           if (p.palpites) {
             let palp = p.palpites;
@@ -67,22 +111,9 @@ export async function rankingRoutes(fastify: FastifyInstance) {
       }
 
       return ranking?.sort((c1: any, c2: any) =>
-        c1.totalPontos < c2.totalPontos
-          ? 1
-          : c1.totalPontos > c2.totalPontos
-          ? -1
-          : 0
+        c1.totalPontos < c2.totalPontos ? 1 : c1.totalPontos > c2.totalPontos ? -1 : 0
       );
-
-      //return {
-      //  jogos_bolao: bolao.map(bolao => {
-      //    return {
-      //      //...jogo,
-      //      palpite: bolao.palpites.length > 0 ? bolao.palpites[0] : null,
-      //      palpites: undefined,
-      //    }
-      //  })
-      //}
+      */
     }
   );
 
@@ -101,97 +132,89 @@ export async function rankingRoutes(fastify: FastifyInstance) {
       const { bolao_id, data } = getBolaoParams.parse(request.params);
       dayjs.extend(utc);
 
-      console.log(dayjs(data).format());
-      console.log(dayjs(data).add(1, "day").format());
+      const dateInicial = dayjs.utc(data);
+      const dateInicialComUTC4 = dateInicial.add(4, "hour");
 
-      /*
-      const palpites = await prisma.jogo_bolao.findMany({
+      const dateFinal = dateInicial.add(1, "day");
+      const dateFinalComUTC4 = dateFinal.add(4, "hour");
+
+      const participantes = await prisma.participante.findMany({
         where: {
           bolao_id: Number(bolao_id),
-          jogo: {
-            AND: [
-              {
-                data: {
-                  gte: dayjs(data).format(),
-                },
-              },
-              {
-                data: {
-                  lt: dayjs(data).add(1, "day").format(),
-                },
-              },
-            ],
-          },
         },
         include: {
-          jogo: true,
+          usuario: {
+            select: {
+              id: true,
+              nome: true,
+              avatarUrl: true,
+            },
+          },
           palpites: {
-            include: {
-              participante: {
-                include: {
-                  usuario: true,
+            where: {
+              jogoBolao: {
+                jogo: {
+                  AND: [
+                    {
+                      data: {
+                        gte: dateInicialComUTC4.format(),
+                      },
+                    },
+                    {
+                      data: {
+                        lt: dateFinalComUTC4.format(),
+                      },
+                    },
+                  ],
                 },
               },
             },
           },
         },
       });
-      */
 
-      const groupUsers = await prisma.palpite.groupBy({
-        by: ["participante_id"],
-        _sum: {
-          pontuacao: true,
-        },
-        where: {
-          jogoBolao: {
-            bolao_id: Number(bolao_id),
-            jogo: {
-              AND: [
-                {
-                  data: {
-                    gte: dayjs(data).format(),
-                  },
-                },
-                {
-                  data: {
-                    lt: dayjs(data).add(1, "day").format(),
-                  },
-                },
-              ],
-            },
-          },
-        },
+      let ranking;
+      if (participantes) {
+        ranking = participantes.map((p) => {
+          const palpites = p.palpites || [];
+
+          const totalPontos = palpites
+            .filter((palpite) => palpite.pontuacao !== null)
+            .reduce((acc, palpite) => acc + Number(palpite.pontuacao), 0);
+
+          const exato = palpites.filter((palpite) => palpite.pontuacao === 21).length;
+
+          const vencedorEmpate = palpites.filter((palpite) => palpite.pontuacao === 10).length;
+
+          const errado = palpites.filter((palpite) => palpite.pontuacao === 0).length;
+
+          return {
+            id_participante: p.id,
+            bolao_id: p.bolao_id,
+            ...p.usuario,
+            totalPontos,
+            exato,
+            vencedorEmpate,
+            errado,
+          };
+        });
+      }
+
+      return ranking?.sort((c1: any, c2: any) => {
+        if (c1.totalPontos !== c2.totalPontos) {
+          return c1.totalPontos < c2.totalPontos ? 1 : -1;
+        }
+
+        if (c1.exato !== c2.exato) {
+          return c1.exato < c2.exato ? 1 : -1;
+        }
+
+        if (c1.vencedorEmpate !== c2.vencedorEmpate) {
+          return c1.vencedorEmpate < c2.vencedorEmpate ? 1 : -1;
+        }
+
+        return 0; // Retorna 0 se todas as propriedades forem iguais
       });
-
-      console.log("groupUsers", groupUsers);
-
-      const palpites = await prisma.palpite.aggregate({
-        where: {
-          jogoBolao: {
-            bolao_id: Number(bolao_id),
-            jogo: {
-              AND: [
-                {
-                  data: {
-                    gte: dayjs(data).format(),
-                  },
-                },
-                {
-                  data: {
-                    lt: dayjs(data).add(1, "day").format(),
-                  },
-                },
-              ],
-            },
-          },
-        },
-        _sum: {
-          pontuacao: true,
-        },
-      });
-
-      return palpites;
     }
   );
 }
