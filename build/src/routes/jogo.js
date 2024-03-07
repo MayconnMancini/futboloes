@@ -296,69 +296,14 @@ async function jogoRoutes(fastify) {
     //atualiza resultados Dos jogos (API)
     fastify.get("/jogos/:datas/updateJogos", {
         onRequest: [authenticate_1.authenticate],
-    }, async (request) => {
+    }, async (request, reply) => {
         const getBolaoParams = zod_1.z.object({
             datas: zod_1.z.string(),
         });
         const { datas } = getBolaoParams.parse(request.params);
         let originalDate = datas;
         try {
-            const { data } = await (0, axios_1.default)(`https://v3.football.api-sports.io/fixtures?date=${datas}&timezone=America/Cuiaba`, {
-                method: "GET",
-                headers: {
-                    "x-apisports-key": process.env.X_APISPORTS_KEY,
-                    "x-apisports-host": process.env.X_APISPORTS_HOST,
-                },
-            });
-            // salva os dados da resposta do google
-            //const jogosData = await jogosResponse.json()
-            //return data["response"]
-            const resp = data["response"];
-            //console.log("############  RESPOSTA ##############");
-            //console.log("resp jogos", resp);
-            //console.log("############  CONVERSÃO ##############");
-            //console.log(resp);
-            /*
-                console.log("############  REST MAP ##############");
-                let final = resp.map(function (item: any) {
-                  return (item.league.name);
-                });
-          
-                console.log("############  REST ##############");
-                //console.log(rest)
-          
-          let tt = resp.filter(function (item: any) {
-    
-            if (item.league.id === 39) {
-              return { ...resp }
-            }
-          });
-    
-          console.log("############  FILTRO ##############");
-          console.log(tt)
-    
-    
-          console.log("############  ORDENAÇÃO POR ID (CRESCENTE) ##############");
-          const sortedCars = resp.sort((c1: any, c2: any) => (c1.league.id > c2.league.id) ? 1 : (c1.league.id < c2.league.id) ? -1 : 0);
-          console.log(sortedCars);
-    
-    
-    
-          JSON.stringify(sortedCars, null, 2);
-    */
-            //let lastDay = new Date(datas);
-            //console.log(new Date("2023-01-13").toDateString())
             dayjs_1.default.extend(utc_1.default);
-            //console.log(datas);
-            //console.log(dayjs(datas))
-            //console.log(dayjs("2023-01-12").format());
-            //console.log(dayjs("2023-01-13").format());
-            //console.log(dayjs().format());
-            //console.log(dayjs.utc(datas).format());
-            //console.log("==========================");
-            //console.log(dayjs(datas).format());
-            //console.log(dayjs(datas).add(1, "day").format());
-            //console.log(new Date("2023-01-13").toISOString());
             // datas no banco de dados são salvas em formato UTC. Entao deve-se usar essa estrategia para retornar
             // os jogos do dia conforme localtime do usuário.
             //Exemplo: Buscar jogo do dia 2023-01-12. Se fosse buscar UTC seria 2023-01-12T00:00 2023-01-12T23:59,
@@ -397,47 +342,45 @@ async function jogoRoutes(fastify) {
                 },
             });
             console.log("jogos bd", jogosBD.length);
-            const updatejogos = jogosBD.map(async (item) => {
-                const matchingResponse = resp.find((r) => item.fixtureIdApi === r.fixture.id &&
-                    r.fixture.status.elapsed >= 90);
-                if (matchingResponse) {
-                    console.log("ID encontrado ->");
-                    await prisma_1.prisma.jogo.update({
-                        where: {
-                            id: item.id,
-                        },
-                        data: {
-                            resultGolTimeCasa: matchingResponse.score.fulltime.home,
-                            resultGolTimeFora: matchingResponse.score.fulltime.away,
-                            statusJogo: matchingResponse.fixture.status.long,
-                            //resultGolTimeCasa: matchingResponse.goals.home,
-                            //resultGolTimeFora: matchingResponse.goals.away,
-                            //statusJogo: matchingResponse.fixture.status.long
-                        },
-                    });
-                }
-            });
-            await Promise.all(updatejogos);
-            // SALVA O RESULTADO DOS JOGOS - FORMA CONVENCIONAL
-            //jogosBD.forEach(item => {
-            //  resp.forEach((r: any) => {
-            //    if (item.fixtureIdApi === r.fixture.id && r.fixture.status.short === "FT") {
-            //      console.log("id encontrado")
-            //      console.log(r.fixture.id)
-            //      item.resultGolTimeCasa = r.score.fulltime.home
-            //      item.resultGolTimeFora = r.score.fulltime.away
-            //    }
-            //  });
-            //});
-            //console.log(teste);
-            //return resp.sort((c1: any, c2: any) => (c1.league.id > c2.league.id) ? 1 : (c1.league.id < c2.league.id) ? -1 : 0);
-            //console.log(jogosBD)
-            await updatePoints(originalDate);
-            return { message: "sucesso" };
+            if (jogosBD?.length > 0) {
+                const { data } = await (0, axios_1.default)(`https://v3.football.api-sports.io/fixtures?date=${datas}&timezone=America/Cuiaba`, {
+                    method: "GET",
+                    headers: {
+                        "x-apisports-key": process.env.X_APISPORTS_KEY,
+                        "x-apisports-host": process.env.X_APISPORTS_HOST,
+                    },
+                });
+                const resp = data["response"];
+                const updatejogos = jogosBD.map(async (item) => {
+                    const matchingResponse = resp.find((r) => item.fixtureIdApi === r.fixture.id && r.fixture.status.elapsed >= 90);
+                    if (matchingResponse) {
+                        console.log("ID encontrado ->");
+                        await prisma_1.prisma.jogo.update({
+                            where: {
+                                id: item.id,
+                            },
+                            data: {
+                                resultGolTimeCasa: matchingResponse.score.fulltime.home,
+                                resultGolTimeFora: matchingResponse.score.fulltime.away,
+                                statusJogo: matchingResponse.fixture.status.long,
+                                //resultGolTimeCasa: matchingResponse.goals.home,
+                                //resultGolTimeFora: matchingResponse.goals.away,
+                                //statusJogo: matchingResponse.fixture.status.long
+                            },
+                        });
+                    }
+                });
+                await Promise.all(updatejogos);
+            }
+            const responseUpdate = await updatePoints(originalDate);
+            if (!responseUpdate) {
+                return reply.status(400).send({ error: { responseUpdate } });
+            }
+            return reply.status(200).send({ message: "sucesso" });
         }
         catch (error) {
             console.log(error);
-            return { message: { error } };
+            return reply.status(400).send({ error });
         }
     });
     // lista jogos cadastrados do bolão
@@ -483,67 +426,72 @@ async function jogoRoutes(fastify) {
 }
 exports.jogoRoutes = jogoRoutes;
 async function updatePoints(date) {
-    dayjs_1.default.extend(utc_1.default);
-    // busca todos os palpites dos bolões conforme data informada
-    const palpites = await prisma_1.prisma.palpite.findMany({
-        where: {
-            jogoBolao: {
-                jogo: {
-                    AND: [
-                        {
-                            data: {
-                                gte: (0, dayjs_1.default)(date).format(),
-                            },
-                        },
-                        {
-                            data: {
-                                lt: (0, dayjs_1.default)(date).add(1, "day").format(),
-                            },
-                        },
-                    ],
-                },
-            },
-        },
-    });
-    palpites.map(async (item) => {
-        let jogo = await prisma_1.prisma.jogo.findFirst({
+    try {
+        dayjs_1.default.extend(utc_1.default);
+        const dateInicial = dayjs_1.default.utc(date);
+        const dateInicialComUTC4 = dateInicial.add(4, "hour");
+        const dateFinal = dateInicial.add(1, "day");
+        const dateFinalComUTC4 = dateFinal.add(4, "hour");
+        // busca todos os palpites dos bolões conforme data informada
+        const palpites = await prisma_1.prisma.palpite.findMany({
             where: {
-                Jogos_boloes: {
-                    some: {
-                        id: item.jogoBolao_id,
+                jogoBolao: {
+                    jogo: {
+                        AND: [
+                            {
+                                data: {
+                                    gte: dateInicialComUTC4.format(),
+                                },
+                            },
+                            {
+                                data: {
+                                    lt: dateFinalComUTC4.format(),
+                                },
+                            },
+                        ],
                     },
                 },
             },
         });
-        if (jogo?.resultGolTimeCasa != null && jogo?.resultGolTimeFora != null) {
-            let pontuacao = 0;
-            if (item.golTimeCasa === jogo.resultGolTimeCasa &&
-                item.golTimeFora === jogo.resultGolTimeFora) {
-                pontuacao = 21;
-            }
-            else {
-                let controlePalpite = item.golTimeCasa > item.golTimeFora
-                    ? 2
-                    : item.golTimeCasa < item.golTimeFora
-                        ? 1
-                        : 0;
-                let controleResultadoJogo = jogo.resultGolTimeCasa > jogo.resultGolTimeFora
-                    ? 2
-                    : jogo.resultGolTimeCasa < jogo.resultGolTimeFora
-                        ? 1
-                        : 0;
-                pontuacao = controlePalpite === controleResultadoJogo ? 10 : 0;
-            }
-            await prisma_1.prisma.palpite.update({
+        palpites.map(async (item) => {
+            let jogo = await prisma_1.prisma.jogo.findFirst({
                 where: {
-                    id: item.id,
-                },
-                data: {
-                    pontuacao: pontuacao,
+                    Jogos_boloes: {
+                        some: {
+                            id: item.jogoBolao_id,
+                        },
+                    },
                 },
             });
-        }
-    });
+            if (jogo?.resultGolTimeCasa != null && jogo?.resultGolTimeFora != null) {
+                let pontuacao = 0;
+                if (item.golTimeCasa === jogo.resultGolTimeCasa && item.golTimeFora === jogo.resultGolTimeFora) {
+                    pontuacao = 21;
+                }
+                else {
+                    let controlePalpite = item.golTimeCasa > item.golTimeFora ? 2 : item.golTimeCasa < item.golTimeFora ? 1 : 0;
+                    let controleResultadoJogo = jogo.resultGolTimeCasa > jogo.resultGolTimeFora
+                        ? 2
+                        : jogo.resultGolTimeCasa < jogo.resultGolTimeFora
+                            ? 1
+                            : 0;
+                    pontuacao = controlePalpite === controleResultadoJogo ? 10 : 0;
+                }
+                await prisma_1.prisma.palpite.update({
+                    where: {
+                        id: item.id,
+                    },
+                    data: {
+                        pontuacao: pontuacao,
+                    },
+                });
+            }
+        });
+        return true;
+    }
+    catch (error) {
+        return error;
+    }
     /*
     // calcula a pontuação dos palpites
     palpites.map(async (item) => {
@@ -615,7 +563,4 @@ async function updatePoints(date) {
       }
     });
     */
-}
-function Now() {
-    throw new Error("Function not implemented.");
 }

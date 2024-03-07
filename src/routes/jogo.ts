@@ -441,9 +441,7 @@ export async function jogoRoutes(fastify: FastifyInstance) {
           const resp = data["response"];
           const updatejogos = jogosBD.map(async (item: any) => {
             const matchingResponse = resp.find(
-              (r: any) =>
-                item.fixtureIdApi === r.fixture.id &&
-                r.fixture.status.elapsed >= 90
+              (r: any) => item.fixtureIdApi === r.fixture.id && r.fixture.status.elapsed >= 90
             );
 
             if (matchingResponse) {
@@ -476,7 +474,7 @@ export async function jogoRoutes(fastify: FastifyInstance) {
         return reply.status(200).send({ message: "sucesso" });
       } catch (error) {
         console.log(error);
-        return reply.status(400).send({ message: { error } });
+        return reply.status(400).send({ error });
       }
     }
   );
@@ -569,18 +567,10 @@ async function updatePoints(date: any) {
       if (jogo?.resultGolTimeCasa != null && jogo?.resultGolTimeFora != null) {
         let pontuacao = 0;
 
-        if (
-          item.golTimeCasa === jogo.resultGolTimeCasa &&
-          item.golTimeFora === jogo.resultGolTimeFora
-        ) {
+        if (item.golTimeCasa === jogo.resultGolTimeCasa && item.golTimeFora === jogo.resultGolTimeFora) {
           pontuacao = 21;
         } else {
-          let controlePalpite =
-            item.golTimeCasa > item.golTimeFora
-              ? 2
-              : item.golTimeCasa < item.golTimeFora
-              ? 1
-              : 0;
+          let controlePalpite = item.golTimeCasa > item.golTimeFora ? 2 : item.golTimeCasa < item.golTimeFora ? 1 : 0;
 
           let controleResultadoJogo =
             jogo.resultGolTimeCasa > jogo.resultGolTimeFora
