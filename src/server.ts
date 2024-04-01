@@ -20,7 +20,16 @@ async function bootstrap() {
   });
 
   await fastify.register(cors, {
-    origin: "*",
+    //origin: "*",
+    origin: true,
+    allowedHeaders: [
+      "Origin",
+      "X-Requested-With",
+      "Accept",
+      "Content-Type",
+      "Authorization",
+    ],
+    methods: ["GET", "PUT", "OPTIONS", "POST", "DELETE"],
   });
 
   await fastify.register(jwt, {
