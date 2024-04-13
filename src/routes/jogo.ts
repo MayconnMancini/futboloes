@@ -5,6 +5,8 @@ import { authenticate } from "../plugins/authenticate";
 
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+//const timezone = require("dayjs/plugin/timezone");
+//const unique = require("dayjs/plugin/unique");
 
 import axios from "axios";
 
@@ -13,6 +15,27 @@ import axios from "axios";
   ACERTOU O TIME VITORIOSO: 10 PONTOS
   ACERTOU QUE VAI DAR EMPATE: 10 PONTOS
 */
+
+async function formataDataUTC4(data: string) {
+  dayjs.extend(utc);
+
+  // Crie a data inicial em UTC
+  const dateInicial = dayjs.utc(data);
+
+  // Adicione um deslocamento de +4 horas
+  const dateInicialComUTC4 = dateInicial.add(4, "hour");
+
+  // Crie a data final adicionando 1 dia em UTC
+  const dateFinal = dateInicial.add(1, "day");
+
+  // Adicione um deslocamento de +4 horas
+  const dateFinalComUTC4 = dateFinal.add(4, "hour");
+
+  return {
+    dataInicial: dateInicialComUTC4,
+    dataFinal: dateFinalComUTC4,
+  };
+}
 
 export async function jogoRoutes(fastify: FastifyInstance) {
   /*
@@ -77,6 +100,136 @@ export async function jogoRoutes(fastify: FastifyInstance) {
     return { message: "sucesso" };
   });
 */
+
+  // retorna jogos cadastrados no bolão e a informação dos palpites do usuário V2 por data
+  fastify.get(
+    "/v2/bolao/:id/rodadas",
+    {
+      onRequest: [authenticate],
+    },
+    async (request) => {
+      const getBolaoParams = z.object({
+        id: z.string(),
+      });
+
+      const { id } = getBolaoParams.parse(request.params);
+
+      const jogos_bolao = await prisma.jogo_bolao.findMany({
+        where: {
+          bolao_id: parseInt(id),
+        },
+        orderBy: {
+          jogo: {
+            data: "asc",
+          },
+        },
+        include: {
+          jogo: {
+            select: {
+              data: true,
+              timeCasa: true,
+              timeFora: true,
+            },
+          },
+        },
+      });
+
+      //return { jogos_bolao }
+
+      const rodadas = jogos_bolao.map((jogo) => {
+        return jogo.jogo.data;
+      });
+
+      dayjs.extend(utc);
+
+      const datesUTC4 = rodadas.map((date) => convertToUTC4(date));
+
+      const uniqueDatesUTC4 = [
+        ...new Set(datesUTC4.map((date) => date.split("T")[0])),
+      ];
+
+      const Rodadas = uniqueDatesUTC4.map((date, index) => {
+        return { rodada: index + 1, data: date };
+      });
+
+      return {
+        data: Rodadas,
+      };
+
+      // retorna apenas um palpite por usuario
+    }
+  );
+
+  // Função para converter data de UTC para UTC+4
+  const convertToUTC4 = (date: any) => {
+    return dayjs.utc(date).add(-4, "hour").format();
+  };
+
+  // retorna jogos cadastrados no bolão e a informação dos palpites do usuário V2 por data
+  fastify.get(
+    "/v2/bolao/:id/jogos/:data/palpites",
+    {
+      onRequest: [authenticate],
+    },
+    async (request) => {
+      const getBolaoParams = z.object({
+        id: z.string(),
+        data: z.string(),
+      });
+
+      const { id, data } = getBolaoParams.parse(request.params);
+
+      const datasFomatada = await formataDataUTC4(data);
+
+      const jogos_bolao = await prisma.jogo_bolao.findMany({
+        where: {
+          bolao_id: parseInt(id),
+          jogo: {
+            AND: [
+              {
+                data: {
+                  gte: datasFomatada.dataInicial.format(),
+                },
+              },
+              {
+                data: {
+                  lt: datasFomatada.dataFinal.format(),
+                },
+              },
+            ],
+          },
+        },
+        orderBy: {
+          jogo: {
+            data: "asc",
+          },
+        },
+        include: {
+          jogo: true,
+          palpites: {
+            where: {
+              participante: {
+                usuario_id: parseInt(request.user.sub),
+              },
+            },
+          },
+        },
+      });
+
+      //return { jogos_bolao }
+
+      // retorna apenas um palpite por usuario
+      return {
+        jogos_bolao: jogos_bolao.map((jogo) => {
+          return {
+            ...jogo,
+            palpite: jogo.palpites.length > 0 ? jogo.palpites[0] : null,
+            palpites: undefined,
+          };
+        }),
+      };
+    }
+  );
 
   // retorna todos jogos cadastrados no bolão e a informação dos palpites do usuário
   fastify.get(
@@ -441,7 +594,9 @@ export async function jogoRoutes(fastify: FastifyInstance) {
           const resp = data["response"];
           const updatejogos = jogosBD.map(async (item: any) => {
             const matchingResponse = resp.find(
-              (r: any) => item.fixtureIdApi === r.fixture.id && r.fixture.status.elapsed >= 90
+              (r: any) =>
+                item.fixtureIdApi === r.fixture.id &&
+                r.fixture.status.elapsed >= 90
             );
 
             if (matchingResponse) {
@@ -567,10 +722,18 @@ async function updatePoints(date: any) {
       if (jogo?.resultGolTimeCasa != null && jogo?.resultGolTimeFora != null) {
         let pontuacao = 0;
 
-        if (item.golTimeCasa === jogo.resultGolTimeCasa && item.golTimeFora === jogo.resultGolTimeFora) {
+        if (
+          item.golTimeCasa === jogo.resultGolTimeCasa &&
+          item.golTimeFora === jogo.resultGolTimeFora
+        ) {
           pontuacao = 21;
         } else {
-          let controlePalpite = item.golTimeCasa > item.golTimeFora ? 2 : item.golTimeCasa < item.golTimeFora ? 1 : 0;
+          let controlePalpite =
+            item.golTimeCasa > item.golTimeFora
+              ? 2
+              : item.golTimeCasa < item.golTimeFora
+              ? 1
+              : 0;
 
           let controleResultadoJogo =
             jogo.resultGolTimeCasa > jogo.resultGolTimeFora
