@@ -13,6 +13,7 @@ import { palpiteRoutes } from "./routes/palpite";
 import { usuarioRoutes } from "./routes/usuario";
 import { date } from "zod";
 import { rankingRoutes } from "./routes/ranking";
+import { relatorioRoutes } from "./routes/relatorio";
 
 async function bootstrap() {
   const fastify = Fastify({
@@ -42,6 +43,7 @@ async function bootstrap() {
   await fastify.register(palpiteRoutes);
   await fastify.register(usuarioRoutes);
   await fastify.register(rankingRoutes);
+  await fastify.register(relatorioRoutes);
 
   await fastify.listen({ port: 3333, host: "0.0.0.0" });
 }

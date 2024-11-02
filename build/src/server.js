@@ -15,12 +15,22 @@ const jogo_1 = require("./routes/jogo");
 const palpite_1 = require("./routes/palpite");
 const usuario_1 = require("./routes/usuario");
 const ranking_1 = require("./routes/ranking");
+const relatorio_1 = require("./routes/relatorio");
 async function bootstrap() {
     const fastify = (0, fastify_1.default)({
     //logger: true,
     });
     await fastify.register(cors_1.default, {
-        origin: "*",
+        //origin: "*",
+        origin: true,
+        allowedHeaders: [
+            "Origin",
+            "X-Requested-With",
+            "Accept",
+            "Content-Type",
+            "Authorization",
+        ],
+        methods: ["GET", "PUT", "OPTIONS", "POST", "DELETE"],
     });
     await fastify.register(jwt_1.default, {
         secret: process.env.SECRETJWT || "",
@@ -31,6 +41,7 @@ async function bootstrap() {
     await fastify.register(palpite_1.palpiteRoutes);
     await fastify.register(usuario_1.usuarioRoutes);
     await fastify.register(ranking_1.rankingRoutes);
+    await fastify.register(relatorio_1.relatorioRoutes);
     await fastify.listen({ port: 3333, host: "0.0.0.0" });
 }
 bootstrap();
